@@ -9,4 +9,5 @@ router.get('/', (req, res) => {
     res.render('driver_lgn_reg.ejs');
   });
 
+    
 module.exports = router;
