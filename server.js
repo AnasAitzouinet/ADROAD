@@ -51,20 +51,36 @@ app.use('/',driver);
       }),
       cookie: { secure: false }
   })) 
-  app.post('/login_driver', (req,res)=>{
+
+  app.post('/login_driver', async (req,res)=>{
+      const driver_check = req.body;
       const email = req.body.email;
       const pswd = req.body.password;
-      const query = `SELECT * FROM Users WHERE email = '${email}' AND password ='${pswd}'`;
-      connection.query(query,(er,results)=>{
-          if (er) throw er;
-          if (results.length>0){
-              req.session.loggedin = true;
-              req.session.email = email;
-              res.redirect('/');
-          }else{
-              res.send('Incorrect email and/or password')
-          }
-      })
+      if(driver_check){
+        const query = `SELECT * FROM drivers WHERE email = '${email}' AND password ='${pswd}'`;
+       await connection.promise().query(query,(er,results)=>{
+            if (er) throw er;
+            if (results.length>0){
+                req.session.loggedin = true;
+                req.session.email = email;
+                res.redirect('/');
+            }else{
+                res.send('Incorrect email and/or password')
+            }
+        })
+      }else{
+        const query = `SELECT * FROM clients WHERE email = '${email}' AND password ='${pswd}'`;
+        connection.query(query,(er,results)=>{
+            if (er) throw er;
+            if (results.length>0){
+                req.session.loggedin = true;
+                req.session.email = email;
+                res.redirect('/');
+            }else{
+                res.send('Incorrect email and/or password')
+            }
+        })
+      }
   })
   app.get('/dashboard',(req,res) =>{
       if(!req.session.email){
@@ -81,22 +97,38 @@ app.use('/',driver);
   })
  
 //-------------- Register Auth ------------//
-app.post('/register', function(req, res) {
-  //let firstName = req.body.firstName;
-  let Username = req.body.Username;
+app.post('/register', async function(req, res) {
+  const driver_check = req.body;
+  let f_name = req.body.f_name;
   let email = req.body.email;
-  let password = req.body.password;
+  const password = await bcrypt.hash(req.body.password,10);
 
-  let sql = 'INSERT INTO users (Username, email, password) VALUES (?,?,?)';
-  let values = [ Username, email, password];
+  if(driver_check){
+    console.log('checked')
+    let sql = 'INSERT INTO drivers (f_name, email, password) VALUES (?,?,?)';
+    let values = [ f_name, email, password];
+  
+    connection.query(sql, values, function(err, result) {
+      if (err) throw err;
+      console.log('User registered successfully!');
+      req.session.loggedin = true;
+      req.session.email = email;
+      res.redirect('/');
+    });
+  }else{
+    console.log('not checked')
+    let sql = 'INSERT INTO clients (f_name, email, password) VALUES (?,?,?)';
+    let values = [ f_name, email, password];
+  
+    connection.query(sql, values, function(err, result) {
+      if (err) throw err;
+      console.log('User registered successfully!');
+      req.session.loggedin = true;
+      req.session.email = email;
+      res.redirect('/');
+    });
+  }
 
-  connection.query(sql, values, function(err, result) {
-    if (err) throw err;
-    console.log('User registered successfully!');
-    req.session.loggedin = true;
-    req.session.email = email;
-    res.redirect('/');
-  });
 });
 
 
