@@ -5,6 +5,4 @@ routerD.get('/BecomeDriver', (req, res) => {
     res.render('driver_info.ejs');
   });
 
- 
-
 module.exports = routerD;

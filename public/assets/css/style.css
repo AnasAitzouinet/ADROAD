@@ -3915,7 +3915,7 @@ label {
 }
 
 .cs-site_branding img {
-  max-height: 45px;
+  max-height: 240px;
 }
 
 @media screen and (min-width: 1200px) {
@@ -5140,7 +5140,7 @@ ul:not(.cs-mega_wrapper)
 }
 
 .cs-hero.cs-style1 .cs-hero_title {
-  font-size: 120px;
+  font-size: 80px;
   font-weight: 700;
   margin-bottom: 60px;
   line-height: 1.25em;
@@ -5665,7 +5665,7 @@ ul:not(.cs-mega_wrapper)
     min-height: 880px;
   }
   .cs-hero.cs-style1 .cs-hero_title {
-    font-size: 100px;
+    font-size: 70px;
   }
   .cs-hero.cs-style3 .cs-hero_title {
     font-size: 80px;
