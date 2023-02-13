@@ -4,6 +4,8 @@
 <head>
   <%- include('../views/partials/head.ejs') %>
     <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="assets/css/style.scss">
+
 </head>
 
 <body>
@@ -15,7 +17,7 @@
         <!-- Brand -->
         <a class="h4 mb-0 text-white text-uppercase d-none d-lg-inline-block" href="/dashboard">Dashboard</a>
         <!-- Form -->
-        
+
         <!-- User -->
         <ul class="navbar-nav align-items-center d-none d-md-flex">
           <li class="nav-item dropdown">
@@ -88,12 +90,18 @@
           <div class="card card-profile shadow">
             <div class="row justify-content-center">
               <div class="col-lg-3 order-lg-2">
-                <div class="card-profile-image">
-                  <img src="https://demos.creative-tim.com/argon-dashboard/assets-old/img/theme/team-4.jpg"
-                    class="rounded-circle">
-                </div>
+                <form id="uploadForm">
+                  <div class="card-profile-image">
+                    <img id="imagePreview"
+                      src="/uploads/<%= image  || 'https://demos.creative-tim.com/argon-dashboard/assets-old/img/theme/team-4.jpg'%>"
+                      class="rounded-circle" onclick="document.getElementById('imageInput').click()">
+                  </div>
+                  <input type="file" name="image" id="imageInput" onchange="previewImage(); saveImage()"
+                    style="display: none;">
+                </form>
               </div>
             </div>
+            <input type="file" id="fileInput" style="display:none">
             <div class="card-header text-center border-0 pt-8 pt-md-4 pb-0 pb-md-4">
               <div class="d-flex justify-content-between">
                 <!-- <a href="#" class="btn btn-sm btn-info mr-4">Connect</a> -->
@@ -124,7 +132,7 @@
                 <hr class="my-4">
                 <p>Ryan — the name taken by Melbourne-raised, Brooklyn-based Nick Murphy — writes, performs and records
                   all of his own music.</p>
-                <a href="#">Show more</a>
+                <!-- <a href="#">Show more</a> -->
               </div>
             </div>
           </div>
@@ -142,7 +150,7 @@
               </div>
             </div>
             <div class="card-body">
-              <form action="/userinfo" method="post">
+              <form action="/userinfo" method="post" enctype="multipart/form-data">
                 <h6 class="heading-small text-muted mb-4">User information</h6>
                 <div class="pl-lg-4">
                   <div class="row">
@@ -150,10 +158,10 @@
                       <div class="form-group focused">
                         <label class="form-control-label" for="input-first-name">First name</label>
                         <input type="text" id="input-first-name" name="f_name"
-                        class="form-control form-control-alternative" placeholder="First name" value=<%=fname %>>
+                          class="form-control form-control-alternative" placeholder="First name" value=<%=fname %>>
                       </div>
                     </div>
-                  
+
                     <div class="col-lg-6">
                       <div class="form-group focused">
                         <label class="form-control-label" for="input-last-name">Last name</label>
@@ -193,6 +201,26 @@
                   </div>
                 </div>
                 <hr class="my-4">
+
+                <div class="pl-lg-4">
+                  <div class="row">
+                    <div class="col-md-12">
+                      <div class="form-group focused">
+                        <label class="form-control-label" for="input-address">Chose Your Picture </label>
+                        <!-- <input id="input-address" class="form-control form-control-alternative"
+                          placeholder="Home Address" value="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09"
+                          type="text"> -->
+                          <br>
+                        <div class="file-upload">
+                          <input class="file-upload__input" type="file" name="myFile" id="myFile" multiple>
+                          <button class="file-upload__button" type="button">Choose File(s)</button>
+                          <span class="file-upload__label"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <hr class="my-4">
                 <!-- Description -->
                 <h6 class="heading-small text-muted mb-4">About me</h6>
                 <div class="pl-lg-4">
@@ -219,5 +247,69 @@
         </div>
       </div>
     </div>
+    <script>
+      function previewImage() {
+        let preview = document.getElementById("imagePreview");
+        let input = document.getElementById("imageInput");
+
+        if (input.files && input.files[0]) {
+          let reader = new FileReader();
+          reader.onload = function (e) {
+            preview.src = e.target.result;
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      function saveImage() {
+        let form = document.getElementById("uploadForm");
+        let formData = new FormData(form);
+
+        fetch('/upload', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+          })
+          .catch(error => {
+            console.error(error);
+          });
+      } 
+    </script>
+    <script>
+      Array.prototype.forEach.call(
+        document.querySelectorAll(".file-upload__button"),
+        function (button) {
+          const hiddenInput = button.parentElement.querySelector(
+            ".file-upload__input"
+          );
+          const label = button.parentElement.querySelector(".file-upload__label");
+          const defaultLabelText = "No file(s) selected";
+
+          // Set default text for label
+          label.textContent = defaultLabelText;
+          label.title = defaultLabelText;
+
+          button.addEventListener("click", function () {
+            hiddenInput.click();
+          });
+
+          hiddenInput.addEventListener("change", function () {
+            const filenameList = Array.prototype.map.call(hiddenInput.files, function (
+              file
+            ) {
+              return file.name;
+            });
+
+            label.textContent = filenameList.join(", ") || defaultLabelText;
+            label.title = label.textContent;
+          });
+        }
+      );
+
+    </script>
   </footer>
 </body>
+</html>

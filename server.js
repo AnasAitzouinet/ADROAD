@@ -7,6 +7,9 @@ const MySQLStore = require("express-mysql-session")(session);
 const mysql = require("mysql2");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const multer = require("multer");
+const path = require('path');
+
 const app = express();
 
 app.use(
@@ -23,6 +26,7 @@ app.use(
     coffeeScriptMatch: /coffeescript/,
   })
 );
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 //------ Routes -------//
 app.set("view engine", "ejs");
@@ -55,7 +59,7 @@ app.use(
 );
 
 app.post("/login_driver", async (req, res) => {
-  const driver_check = req.body;
+  const driver_check = req.body.driver_check;
   const email = req.body.email;
   const pswd = req.body.password;
   if (driver_check) {
@@ -68,7 +72,6 @@ app.post("/login_driver", async (req, res) => {
         if (match) {
           req.session.loggedin = true;
           req.session.userId = results[0][0].id;
-          console.log(req.session);
           res.redirect("/dashboard");
         } else {
           res.send("Incorrect email and/or password");
@@ -90,7 +93,7 @@ app.post("/login_driver", async (req, res) => {
         if (match) {
           req.session.loggedin = true;
           req.session.userId = results[0].id;
-          res.redirect("/dashboard");
+          res.redirect("/clients");
         } else {
           res.send("Incorrect email and/or password");
         }
@@ -110,7 +113,8 @@ app.get("/dashboard", (req, res) => {
       [req.session.userId],
       function (error, results, fields) {
         if (error) throw error;
-        // console.log(results[0])
+        console.log(results[0].profile_pic);
+        console.log(results[0]);
         data = results[0];
         res.render("dashboard.ejs", {
           fname: data.f_name,
@@ -121,17 +125,26 @@ app.get("/dashboard", (req, res) => {
           cin: data.cin,
           adress: data.adresse,
           username: data.username,
+          image: data.profile_pic,
         });
       }
     );
   } else {
     res.redirect("/driver");
-
   }
 });
 
 //-------------- update infos ---------------//
-app.post("/userinfo", (req, res) => {
+const storagee = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/images");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+  },
+});
+const uploadd = multer({ storage: storagee });
+app.post("/userinfo", uploadd.array('myFile', 4), (req, res) => {
   if (req.session.loggedin) {
     const username = req.body.username;
     const email = req.body.email;
@@ -142,7 +155,7 @@ app.post("/userinfo", (req, res) => {
     const cin = req.body.cin;
 
     let sql =
-      "UPDATE drivers SET username = ?, f_name = ?, l_name = ?, age = ?, phone_number = ?, cin = ?, email = ? WHERE id = ?";
+      "UPDATE drivers SET username = ?, f_name = ?, l_name = ?, age = ?, phone_number = ?, cin = ?, email = ? , pic1 = ?, pic2 = ?, pic3 = ?, pic4 = ? WHERE id = ?";
     let values = [
       username,
       fname,
@@ -151,21 +164,56 @@ app.post("/userinfo", (req, res) => {
       num,
       cin,
       email,
+      "/images/" + req.files[0].filename,
+      "/images/" + req.files[1].filename,
+      "/images/" + req.files[2].filename,
+      "/images/" + req.files[3].filename,
       req.session.userId,
     ];
 
     connection.query(sql, values, function (err, result) {
       if (err) throw err;
       console.log("User got updated!");
-      // req.session.loggedin = true;
-      // req.session.email = email;
       res.redirect("/dashboard");
     });
   }
 });
+//-------------- insert image --------------//
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + Date.now() + ".jpg");
+  },
+});
+const upload = multer({ storage: storage }).single("image");
+
+app.post("/upload", function (req, res) {
+  // Check if a user is logged in
+  if (!req.session.userId) {
+    return res.status(401).send({ error: "Unauthorized. Please log in first." });
+  }
+
+  upload(req, res, function (err) {
+    if (err) {
+      console.error(err.message);
+      return res.status(500).send(err.message);
+    }
+    let image = req.file;
+    console.log("Received image:", image);
+    // Save the image to the database
+    const sql = "UPDATE drivers SET profile_pic = ? WHERE id = ?";
+    connection.query(sql, [image.filename, req.session.userId], (err, result) => {
+      if (err) throw err;
+      res.status(200).send({ status: "success" });
+    });
+  });
+});
+
 //-------------- Register Auth ------------//
 app.post("/register", async function (req, res) {
-  const driver_check = req.body;
+  const driver_check = req.body.driver_check;
   let f_name = req.body.f_name;
   let email = req.body.email;
   const password = await bcrypt.hash(req.body.password, 10);
@@ -177,7 +225,7 @@ app.post("/register", async function (req, res) {
       if (err) throw err;
       if (result.length) {
         console.log("Email already in use. Please choose a different email.");
-        res.redirect("/register");
+        res.redirect("/driver");
       } else {
         console.log("checked");
         let sql =
@@ -188,8 +236,8 @@ app.post("/register", async function (req, res) {
           if (err) throw err;
           console.log("User registered successfully!");
           req.session.loggedin = true;
-          req.session.userId = result[0].id;
-          res.redirect("/");
+          req.session.userId = result.insertId;
+          res.redirect("/driver");
         });
       }
     });
@@ -202,12 +250,32 @@ app.post("/register", async function (req, res) {
       if (err) throw err;
       console.log("User registered successfully!");
       req.session.loggedin = true;
-      req.session.email = email;
-      res.redirect("/");
+      console.log(result)
+      req.session.userId = result.id;
+      res.redirect("/clients");
     });
   }
 });
 
+//-------------- clients -----------------//
+app.get('/clients', async(req, res) => {
+  connection.query("SELECT * FROM drivers",(error,result)=>{
+    if (error) throw error;
+    res.render('clients.ejs',{drivers:result});
+
+  })
+});
+
+app.get('/clients/:id', async(req, res) => {
+  connection.query("SELECT * FROM drivers WHERE id = ?", [req.params.id], (error, result) => {
+    if (error) throw error;
+    if (result.length > 0) {
+      res.render('client-detail.ejs', { driver: result });
+    } else {
+      res.status(404).send("Driver not found");
+    }
+  });
+});
 //---------- Server is on ---------//
 app.listen(1000, () => {
   console.log("Server is On!!");
