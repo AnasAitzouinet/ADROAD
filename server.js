@@ -34,6 +34,7 @@ app.use(express.static("public"));
 app.use("/", MainRoute);
 app.use("/", driver);
 
+
 //--------- Login Auth ---------- //
 app.use(express.urlencoded({ extended: true }));
 const secretKey = crypto.randomBytes(32).toString("hex");
@@ -113,8 +114,8 @@ app.get("/dashboard", (req, res) => {
       [req.session.userId],
       function (error, results, fields) {
         if (error) throw error;
-        console.log(results[0].profile_pic);
-        console.log(results[0]);
+        // console.log(results[0].profile_pic);
+        // console.log(results[0]);
         data = results[0];
         res.render("dashboard.ejs", {
           fname: data.f_name,
@@ -133,7 +134,20 @@ app.get("/dashboard", (req, res) => {
     res.redirect("/driver");
   }
 });
-
+//----------- visitors ----------//
+app.use((req, res, next) => {
+  if (!req.session.visitorId) {
+    // Generate a unique visitor ID and store it in the session
+    req.session.visitorId = Math.floor(Math.random() * 1000000);
+    // Update the visitor count in the database
+    connection.query('UPDATE userdata SET visitors = visitors + 1 WHERE id = 1', (error, results, fields) => {
+      if (error) {
+        console.error('Error updating visitor count in database', error);
+      }
+    });
+  }
+  next();
+});
 //-------------- update infos ---------------//
 const storagee = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -146,31 +160,32 @@ const storagee = multer.diskStorage({
 const uploadd = multer({ storage: storagee });
 app.post("/userinfo", uploadd.array('myFile', 4), (req, res) => {
   if (req.session.loggedin) {
-    const username = req.body.username;
     const email = req.body.email;
     const fname = req.body.f_name;
     const lname = req.body.l_name;
     const age = req.body.age;
     const num = req.body.num;
-    const cin = req.body.cin;
+    // const cin = req.body.cin;
+    const username = fname + lname;
 
     let sql =
-      "UPDATE drivers SET username = ?, f_name = ?, l_name = ?, age = ?, phone_number = ?, cin = ?, email = ? , pic1 = ?, pic2 = ?, pic3 = ?, pic4 = ? WHERE id = ?";
+      "UPDATE drivers SET username = ?, f_name = ?, l_name = ?, age = ?, phone_number = ?,  email = ? , pic1 = ?, pic2 = ?, pic3 = ?, pic4 = ? WHERE id = ?";
     let values = [
       username,
       fname,
       lname,
       age,
       num,
-      cin,
-      email,
-      "/images/" + req.files[0].filename,
-      "/images/" + req.files[1].filename,
-      "/images/" + req.files[2].filename,
-      "/images/" + req.files[3].filename,
-      req.session.userId,
+      email
     ];
-
+    for (let i = 0; i < 4; i++) {
+      if (req.files[i]) {
+        values.push("/images/" + req.files[i].filename);
+      } else {
+        values.push(null);
+      }
+    }
+    values.push(req.session.userId);
     connection.query(sql, values, function (err, result) {
       if (err) throw err;
       console.log("User got updated!");
@@ -237,6 +252,11 @@ app.post("/register", async function (req, res) {
           console.log("User registered successfully!");
           req.session.loggedin = true;
           req.session.userId = result.insertId;
+          connection.query('UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1', (error, resultss, fields) => {
+            if (error) {
+              console.error('Error updating created_acc count in database', error);
+            }
+          });          
           res.redirect("/driver");
         });
       }
@@ -252,6 +272,11 @@ app.post("/register", async function (req, res) {
       req.session.loggedin = true;
       console.log(result)
       req.session.userId = result.id;
+      connection.query('UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1', (error, resultss, fields) => {
+        if (error) {
+          console.error('Error updating created_acc count in database', error);
+        }
+      });    
       res.redirect("/clients");
     });
   }
@@ -270,11 +295,38 @@ app.get('/clients/:id', async(req, res) => {
   connection.query("SELECT * FROM drivers WHERE id = ?", [req.params.id], (error, result) => {
     if (error) throw error;
     if (result.length > 0) {
+      console.log(result[0])
       res.render('client-detail.ejs', { driver: result });
     } else {
       res.status(404).send("Driver not found");
     }
   });
+});
+
+//------------- SuperAdmin ---------------//
+app.get('/admin',(req,res) =>{
+  res.render("Admin/index.ejs");
+});
+
+app.post('/log',async(req,res) =>{
+  const username = req.body.username;
+  const pass = req.body.psd;
+  const query = `SELECT * FROM sadmin WHERE username = '${username}' AND password = '${pass}'`;
+  try {
+    const results = await connection.promise().query(query);
+    if (results[0].length > 0) {
+      const driver = results[0][0];
+        req.session.admin = true;
+        // req.session.userId = results[0][0].id;
+        res.redirect("/admin");    
+      }else {
+        res.send("Incorrect username and/or password");
+      }
+    }
+    catch (error) {
+    console.error(error);
+    res.send("An error occurred while checking the login information");
+  }
 });
 //---------- Server is on ---------//
 app.listen(1000, () => {

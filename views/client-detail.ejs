@@ -8,28 +8,28 @@
 
 <body>
     <%- include('../views/partials/header.ejs') %>
-        <div class="cs-page_heading cs-style1 cs-center text-center cs-bg" data-src="assets/img/team_hero_bg.jpeg">
-            <div class="container">
-                <div class="cs-page_heading_in">
-                    <h1 class="cs-page_title cs-font_50 cs-white_color"><%= driver[i].f_name %></h1>
-                    <ol class="breadcrumb text-uppercase">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item active">Team Details</li>
-                    </ol>
-                </div>
+    <div class="cs-page_heading cs-style1 cs-center text-center cs-bg" data-src="assets/img/team_hero_bg.jpeg">
+        <div class="container">
+            <% for (var i = 0; i < driver.length; i++) { %>
+            <div class="cs-page_heading_in">
+                <h1 class="cs-page_title cs-font_50 cs-white_color"><%= driver[i].f_name %></h1>
+                <ol class="breadcrumb text-uppercase">
+                    <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                    <li class="breadcrumb-item active">Team Details</li>
+                </ol>
             </div>
         </div>
-        <!-- End Hero -->
-        <!-- End Why Choose -->
-        <div class="cs-height_150 cs-height_lg_80"></div>
-        <!-- Start Team Section -->
-        <section>
+    </div>
+    <!-- End Hero -->
+    <!-- End Why Choose -->
+    <div class="cs-height_150 cs-height_lg_80"></div>
+    <!-- Start Team Section -->
+    <section>
             <div class="container">
-                <% for (var i = 0; i < driver.length; i++) { %>
 
                 <div class="row align-items-center">
                     <div class="col-xl-5 col-lg-6">
-                        <img src="assets/img/member_details_1.jpeg" alt="Member" class="cs-radius_15 w-100">
+                        <img src="/uploads/<%= driver[i].profile_pic %>" alt="Member" class="cs-radius_15 w-100">
                     </div>
                     <div class="col-lg-6 offset-xl-1">
                         <div class="cs-height_0 cs-height_lg_45"></div>
@@ -51,6 +51,7 @@
                                 voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis
                                 suscipit.</p>
                             <div class="cs-height_45 cs-height_lg_30"></div>
+                            
                             <div class="cs-social_btns cs-style1">
                                 <a href="#" class="cs-center">
                                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
@@ -87,14 +88,14 @@
                             </div>
                         </div>
                     </div>
-                    <% } %>
                 </div>
             </div>
+            <% } %>
         </section>
         <!-- End Team Section -->
         <div class="cs-height_150 cs-height_lg_80"></div>
         <!-- Start CTA -->
-
+        
         <%- include('../views/partials/footer.ejs') %>
 </body>
 

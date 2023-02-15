@@ -39,7 +39,13 @@ html {
   font-weight: 400;
   line-height: 1.6em;
   overflow-x: hidden;
-  background-color: #144d51;
+  background-image: url('/assets/img/bg.jpeg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  /* background: #373B44;  /* fallback for old browsers */
+/* background: -webkit-linear-gradient(to bottom, #4286f4, #373B44);  Chrome 10-25, Safari 5.1-6 */
+/* background: linear-gradient(to bottom, #4286f4, #373B44); W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */ */
+
 }
 
 h1,
@@ -3915,7 +3921,7 @@ label {
 }
 
 .cs-site_branding img {
-  max-height: 240px;
+  max-height: 45px;
 }
 
 @media screen and (min-width: 1200px) {
@@ -4321,7 +4327,11 @@ ul:not(.cs-mega_wrapper)
     display: none;
   }
 }
-
+@media screen and (max-width: 992px) {
+  .btn_br{
+    margin-right: -96px;
+    margin-left: 64px;  }
+}
 @media screen and (max-width: 991px) {
   .cs-site_header .container {
     max-width: 100%;
@@ -4332,6 +4342,7 @@ ul:not(.cs-mega_wrapper)
   .cs-site_header.cs-style1 .cs-btn {
     padding: 8px;
   }
+  
 }
 
 @media screen and (max-width: 575px) {
@@ -4342,8 +4353,9 @@ ul:not(.cs-mega_wrapper)
     margin-right: 0;
   }
   .cs-site_branding img {
-    max-height: 32px;
-  }
+    max-height: 42px;
+   
+}  }
   .cs-site_header.cs-style1 .cs-btn span {
     display: none;
   }
@@ -4446,7 +4458,47 @@ ul:not(.cs-mega_wrapper)
   border: none;
   overflow: hidden;
 }
-
+.btn_br{
+  padding: 7px 25px;
+  border-radius: 10px;
+  /* margin-right: 140px; */
+  color: #fff;
+  background-color: #00f0ff;
+  position: absolute;
+  top: 15px;
+  right: 187px;
+  font-weight: 600;
+  border: none;
+  overflow: hidden;
+}
+.btn_br::before{
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(22, 22, 22, 0.4);
+  -webkit-transform: scaleX(0);
+          transform: scaleX(0);
+  -webkit-transform-origin: 0 50%;
+          transform-origin: 0 50%;
+  -webkit-transition-property: -webkit-transform;
+  transition-property: -webkit-transform;
+  transition-property: transform;
+  transition-property: transform, -webkit-transform;
+  -webkit-transition-duration: 0.6s;
+          transition-duration: 0.6s;
+  -webkit-transition-timing-function: ease-out;
+          transition-timing-function: ease-out;
+  border-radius: inherit;
+}
+.btn_br:hover:before{
+  -webkit-transform: scaleX(1);
+  transform: scaleX(1);
+-webkit-transition-timing-function: cubic-bezier(0.52, 1.64, 0.37, 0.66);
+  transition-timing-function: cubic-bezier(0.52, 1.64, 0.37, 0.66);
+}
 .cs-newsletter.cs-style1 .cs-newsletter_btn:before {
   content: "";
   position: absolute;
