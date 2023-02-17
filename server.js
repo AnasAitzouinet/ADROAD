@@ -8,7 +8,9 @@ const mysql = require("mysql2");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
-const path = require('path');
+const path = require("path");
+const Chart = require('chart.js/auto');
+const Canvas = require('canvas');
 
 const app = express();
 
@@ -33,7 +35,6 @@ app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use("/", MainRoute);
 app.use("/", driver);
-
 
 //--------- Login Auth ---------- //
 app.use(express.urlencoded({ extended: true }));
@@ -140,11 +141,14 @@ app.use((req, res, next) => {
     // Generate a unique visitor ID and store it in the session
     req.session.visitorId = Math.floor(Math.random() * 1000000);
     // Update the visitor count in the database
-    connection.query('UPDATE userdata SET visitors = visitors + 1 WHERE id = 1', (error, results, fields) => {
-      if (error) {
-        console.error('Error updating visitor count in database', error);
+    connection.query(
+      "UPDATE userdata SET visitors = visitors + 1 WHERE id = 1",
+      (error, results, fields) => {
+        if (error) {
+          console.error("Error updating visitor count in database", error);
+        }
       }
-    });
+    );
   }
   next();
 });
@@ -154,11 +158,14 @@ const storagee = multer.diskStorage({
     cb(null, "public/images");
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+    cb(
+      null,
+      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+    );
   },
 });
 const uploadd = multer({ storage: storagee });
-app.post("/userinfo", uploadd.array('myFile', 4), (req, res) => {
+app.post("/userinfo", uploadd.array("myFile", 4), (req, res) => {
   if (req.session.loggedin) {
     const email = req.body.email;
     const fname = req.body.f_name;
@@ -170,14 +177,7 @@ app.post("/userinfo", uploadd.array('myFile', 4), (req, res) => {
 
     let sql =
       "UPDATE drivers SET username = ?, f_name = ?, l_name = ?, age = ?, phone_number = ?,  email = ? , pic1 = ?, pic2 = ?, pic3 = ?, pic4 = ? WHERE id = ?";
-    let values = [
-      username,
-      fname,
-      lname,
-      age,
-      num,
-      email
-    ];
+    let values = [username, fname, lname, age, num, email];
     for (let i = 0; i < 4; i++) {
       if (req.files[i]) {
         values.push("/images/" + req.files[i].filename);
@@ -207,7 +207,9 @@ const upload = multer({ storage: storage }).single("image");
 app.post("/upload", function (req, res) {
   // Check if a user is logged in
   if (!req.session.userId) {
-    return res.status(401).send({ error: "Unauthorized. Please log in first." });
+    return res
+      .status(401)
+      .send({ error: "Unauthorized. Please log in first." });
   }
 
   upload(req, res, function (err) {
@@ -219,10 +221,14 @@ app.post("/upload", function (req, res) {
     console.log("Received image:", image);
     // Save the image to the database
     const sql = "UPDATE drivers SET profile_pic = ? WHERE id = ?";
-    connection.query(sql, [image.filename, req.session.userId], (err, result) => {
-      if (err) throw err;
-      res.status(200).send({ status: "success" });
-    });
+    connection.query(
+      sql,
+      [image.filename, req.session.userId],
+      (err, result) => {
+        if (err) throw err;
+        res.status(200).send({ status: "success" });
+      }
+    );
   });
 });
 
@@ -252,11 +258,17 @@ app.post("/register", async function (req, res) {
           console.log("User registered successfully!");
           req.session.loggedin = true;
           req.session.userId = result.insertId;
-          connection.query('UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1', (error, resultss, fields) => {
-            if (error) {
-              console.error('Error updating created_acc count in database', error);
+          connection.query(
+            "UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1",
+            (error, resultss, fields) => {
+              if (error) {
+                console.error(
+                  "Error updating created_acc count in database",
+                  error
+                );
+              }
             }
-          });          
+          );
           res.redirect("/driver");
         });
       }
@@ -270,45 +282,102 @@ app.post("/register", async function (req, res) {
       if (err) throw err;
       console.log("User registered successfully!");
       req.session.loggedin = true;
-      console.log(result)
+      console.log(result);
       req.session.userId = result.id;
-      connection.query('UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1', (error, resultss, fields) => {
-        if (error) {
-          console.error('Error updating created_acc count in database', error);
+      connection.query(
+        "UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1",
+        (error, resultss, fields) => {
+          if (error) {
+            console.error(
+              "Error updating created_acc count in database",
+              error
+            );
+          }
         }
-      });    
+      );
       res.redirect("/clients");
     });
   }
 });
 
 //-------------- clients -----------------//
-app.get('/clients', async(req, res) => {
-  connection.query("SELECT * FROM drivers",(error,result)=>{
+app.get("/clients", async (req, res) => {
+  connection.query("SELECT * FROM drivers", (error, result) => {
     if (error) throw error;
-    res.render('clients.ejs',{drivers:result});
-
-  })
-});
-
-app.get('/clients/:id', async(req, res) => {
-  connection.query("SELECT * FROM drivers WHERE id = ?", [req.params.id], (error, result) => {
-    if (error) throw error;
-    if (result.length > 0) {
-      console.log(result[0])
-      res.render('client-detail.ejs', { driver: result });
-    } else {
-      res.status(404).send("Driver not found");
-    }
+    res.render("clients.ejs", { drivers: result });
   });
 });
 
-//------------- SuperAdmin ---------------//
-app.get('/admin',(req,res) =>{
-  res.render("Admin/index.ejs");
+app.get("/clients/:id", async (req, res) => {
+  connection.query(
+    "SELECT * FROM drivers WHERE id = ?",
+    [req.params.id],
+    (error, result) => {
+      if (error) throw error;
+      if (result.length > 0) {
+        console.log(result[0]);
+        res.render("client-detail.ejs", { driver: result });
+      } else {
+        res.status(404).send("Driver not found");
+      }
+    }
+  );
 });
 
-app.post('/log',async(req,res) =>{
+//------------- SuperAdmin ---------------//
+// Load the data and render the page
+app.get('/admin', (req, res) => {
+  connection.query('SELECT * FROM userdata', (err, result) => {
+    if (err) {
+      console.error(err);
+      res.sendStatus(500);
+      return;
+    }
+
+    const visitorCount = result[0].visitors;
+    const accountCount = result[0].created_acc;
+
+    const canvas = Canvas.createCanvas(500, 500);
+    const ctx = canvas.getContext('2d');
+
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['All-time visitors', 'Created accounts'],
+        datasets: [
+          {
+            label: 'Count',
+            data: [visitorCount, accountCount],
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.2)',
+              'rgba(54, 162, 235, 0.2)',
+            ],
+            borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+
+    const chartUrl = canvas.toDataURL();
+    
+    res.render('Admin/index.ejs', {
+      visitors: result[0].visitors,
+      Drivers: result[0].created_acc,
+      clients: result[0].clients,
+      chart: chartUrl,
+    });
+  });
+});
+
+app.post("/log", async (req, res) => {
   const username = req.body.username;
   const pass = req.body.psd;
   const query = `SELECT * FROM sadmin WHERE username = '${username}' AND password = '${pass}'`;
@@ -316,14 +385,13 @@ app.post('/log',async(req,res) =>{
     const results = await connection.promise().query(query);
     if (results[0].length > 0) {
       const driver = results[0][0];
-        req.session.admin = true;
-        // req.session.userId = results[0][0].id;
-        res.redirect("/admin");    
-      }else {
-        res.send("Incorrect username and/or password");
-      }
+      req.session.admin = true;
+      // req.session.userId = results[0][0].id;
+      res.redirect("/admin");
+    } else {
+      res.send("Incorrect username and/or password");
     }
-    catch (error) {
+  } catch (error) {
     console.error(error);
     res.send("An error occurred while checking the login information");
   }

@@ -13,4 +13,7 @@ router.get('/logadmin',(req,res)=>{
   res.render("admin/logadmin.ejs")
 });
 
+router.get('/admin/tabledb',(req,res)=>{
+  res.render("admin/tables-datatables.ejs")
+});
 module.exports = router;
