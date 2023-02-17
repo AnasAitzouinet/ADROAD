@@ -11,6 +11,16 @@ const multer = require("multer");
 const path = require("path");
 const Chart = require('chart.js/auto');
 const Canvas = require('canvas');
+// const ejs = require('ejs');
+// const fs = require('fs');
+// const _ = require('underscore');
+
+// // define the include function
+// ejs.filters.include = function(file, data) {
+//   const filePath = path.join(__dirname, file);
+//   const fileContent = fs.readFileSync(filePath, 'utf8');
+//   return ejs.render(fileContent, data);
+// };
 
 const app = express();
 
