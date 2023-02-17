@@ -2,8 +2,8 @@
 
 const express = require("express");
 var minify = require("express-minify");
-const MainRoute = require("./routes/index");
-const driver = require("./routes/driver");
+// const MainRoute = require("./routes/index");
+// const driver = require("./routes/driver");
 const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
 const mysql = require("mysql2");
@@ -42,9 +42,23 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 //------ Routes -------//
 app.set("view engine", "ejs");
 app.use(express.static("public"));
-app.use("/", MainRoute);
-app.use("/", driver);
-
+// app.use("/", MainRoute);
+// app.use("/", driver);
+app.get('/', (req, res) => {
+  res.render('index.ejs');
+});
+app.get('/driver', (req, res) => {
+  res.render('driver_lgn_reg.ejs');
+});
+app.get('/logadmin', (req, res) => {
+  res.render("admin/logadmin.ejs");
+});
+app.get('/admin/tabledb', (req, res) => {
+  res.render("admin/tables-datatables.ejs");
+});
+app.get('/BecomeDriver', (req, res) => {
+  res.render('driver_info.ejs');
+});
 //--------- Login Auth ---------- //
 app.use(express.urlencoded({
   extended: true
