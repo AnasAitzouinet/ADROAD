@@ -64,21 +64,27 @@ app.use(express.urlencoded({
   extended: true
 }));
 const secretKey = crypto.randomBytes(32).toString("hex");
+// const connection = mysql.createConnection({
+//   host: "localhost",
+//   user: "root",
+//   password: "Bustguy123+",
+//   database: "userDb",
+// });
 const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "Bustguy123+",
-  database: "userDb"
+  host: "eu-cdbr-west-03.cleardb.net",
+  user: "b23c8a045bfb66",
+  password: "a2b3cd99",
+  database: "heroku_e89598fb25b1a5e"
 });
 app.use(session({
   secret: secretKey,
   resave: false,
   saveUninitialized: false,
   store: new MySQLStore({
-    host: "127.0.0.1",
-    user: "root",
-    password: "Bustguy123+",
-    database: "userDb"
+    host: "eu-cdbr-west-03.cleardb.net",
+    user: "b23c8a045bfb66",
+    password: "a2b3cd99",
+    database: "heroku_e89598fb25b1a5e"
   }),
   cookie: {
     secure: false,
