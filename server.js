@@ -11,6 +11,7 @@ const multer = require("multer");
 const path = require("path");
 const Chart = require('chart.js/auto');
 const Canvas = require('canvas');
+require('regenerator-runtime/runtime');
 
 const app = express();
 
@@ -420,6 +421,6 @@ app.post("/log", async (req, res) => {
   }
 });
 //---------- Server is on ---------//
-app.listen(1000, () => {
+app.listen(process.env.PORT || 1000, () => {
   console.log("Server is On!!");
 });
