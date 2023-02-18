@@ -11,7 +11,6 @@ const multer = require("multer");
 const path = require("path");
 const Chart = require('chart.js/auto');
 const Canvas = require('canvas');
-require('regenerator-runtime/runtime');
 
 const app = express();
 
