@@ -59,13 +59,36 @@ const secretKey = crypto.randomBytes(32).toString("hex");
 //   password: "Bustguy123+",
 //   database: "userDb",
 // });
-const connection = mysql.createConnection({
+const db_config={
   host: "eu-cdbr-west-03.cleardb.net",
   user: "b23c8a045bfb66",
   password: "a2b3cd99",
   database: "heroku_e89598fb25b1a5e",
-});
+};
+var connection;
 
+function handleDisconnect() {
+  connection = mysql.createConnection(db_config); // Recreate the connection, since
+                                                  // the old one cannot be reused.
+
+  connection.connect(function(err) {              // The server is either down
+    if(err) {                                     // or restarting (takes a while sometimes).
+      console.log('error when connecting to db:', err);
+      setTimeout(handleDisconnect, 2000); // We introduce a delay before attempting to reconnect,
+    }                                     // to avoid a hot loop, and to allow our node script to
+  });                                     // process asynchronous requests in the meantime.
+                                          // If you're also serving http, display a 503 error.
+  connection.on('error', function(err) {
+    console.log('db error', err);
+    if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+      handleDisconnect();                         // lost due to either server restart, or a
+    } else {                                      // connnection idle timeout (the wait_timeout
+      throw err;                                  // server variable configures this)
+    }
+  });
+}
+
+handleDisconnect();
 app.use(
   session({
     secret: secretKey,
@@ -137,12 +160,11 @@ app.get("/dashboard", (req, res) => {
       function (error, results, fields) {
         if (error) throw error;
         // console.log(results[0].profile_pic);
-        // console.log(results[0]);
+        console.log(results[0]);
         data = results[0];
         res.render("dashboard.ejs", {
           fname: data.f_name,
           lname: data.l_name,
-          age: data.age,
           email: data.email,
           num: data.phone_number,
           cin: data.cin,
@@ -191,14 +213,14 @@ app.post("/userinfo", uploadd.array("myFile", 4), (req, res) => {
     const email = req.body.email;
     const fname = req.body.f_name;
     const lname = req.body.l_name;
-    const age = req.body.age;
+    // const age = req.body.age:;
     const num = req.body.num;
     // const cin = req.body.cin;
     const username = fname + lname;
 
     let sql =
-      "UPDATE drivers SET username = ?, f_name = ?, l_name = ?, age = ?, phone_number = ?,  email = ? , pic1 = ?, pic2 = ?, pic3 = ?, pic4 = ? WHERE id = ?";
-    let values = [username, fname, lname, age, num, email];
+      "UPDATE drivers SET username = ?, f_name = ?, l_name = ?, phone_number = ?,  email = ? , pic1 = ?, pic2 = ?, pic3 = ?, pic4 = ? WHERE id = ?";
+    let values = [username, fname, lname, num, email];
     for (let i = 0; i < 4; i++) {
       if (req.files[i]) {
         values.push("/images/" + req.files[i].filename);
