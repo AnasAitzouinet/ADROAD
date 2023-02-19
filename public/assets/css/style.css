@@ -39,12 +39,13 @@ html {
   font-weight: 400;
   line-height: 1.6em;
   overflow-x: hidden;
-  background-image: url('/assets/img/ERR.jpg');
+  /* background-color: #cac9c9; */
+  /* background-image: url('/assets/img/ERR.jpg');
   background-repeat: no-repeat;
-  background-size: inherit;
-  /* background: #373B44;  
+  background-size: inherit; */
+ background: #bebebe;  
 background: -webkit-linear-gradient(to bottom, #4286f4, #373B44); 
-background: linear-gradient(to bottom, #4286f4, #373B44); */
+background: linear-gradient(to bottom, #d8e3f5, #586177); 
 
 }
 

@@ -7,10 +7,11 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
 const path = require("path");
-const Chart = require('chart.js/auto');
-const Canvas = require('canvas');
+const Chart = require("chart.js/auto");
+const Canvas = require("canvas");
 const port = process.env.PORT || 1000;
 const app = express();
+const Swal = require("sweetalert2");
 
 app.use(
   minify({
@@ -30,25 +31,25 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 //------ Routes -------//
 app.set("view engine", "ejs");
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.get('/', (req, res) => {
-  res.render('index.ejs');
+app.get("/", (req, res) => {
+  res.render("index.ejs");
 });
 
-app.get('/driver', (req, res) => {
-  res.render('driver_lgn_reg.ejs');
+app.get("/driver", (req, res) => {
+  res.render("driver_lgn_reg.ejs", { message: req.query.message });
 });
 
-app.get('/logadmin',(req,res)=>{
-res.render("admin/logadmin.ejs")
+app.get("/logadmin", (req, res) => {
+  res.render("admin/logadmin.ejs");
 });
 
-app.get('/admin/tabledb',(req,res)=>{
-res.render("admin/tables-datatables.ejs")
+app.get("/admin/tabledb", (req, res) => {
+  res.render("admin/tables-datatables.ejs");
 });
-app.get('/BecomeDriver', (req, res) => {
-  res.render('driver_info.ejs');
+app.get("/BecomeDriver", (req, res) => {
+  res.render("driver_info.ejs");
 });
 //--------- Login Auth ---------- //
 app.use(express.urlencoded({ extended: true }));
@@ -59,7 +60,7 @@ const secretKey = crypto.randomBytes(32).toString("hex");
 //   password: "Bustguy123+",
 //   database: "userDb",
 // });
-const db_config={
+const db_config = {
   host: "eu-cdbr-west-03.cleardb.net",
   user: "b23c8a045bfb66",
   password: "a2b3cd99",
@@ -69,21 +70,25 @@ var connection;
 
 function handleDisconnect() {
   connection = mysql.createConnection(db_config); // Recreate the connection, since
-                                                  // the old one cannot be reused.
+  // the old one cannot be reused.
 
-  connection.connect(function(err) {              // The server is either down
-    if(err) {                                     // or restarting (takes a while sometimes).
-      console.log('error when connecting to db:', err);
+  connection.connect(function (err) {
+    // The server is either down
+    if (err) {
+      // or restarting (takes a while sometimes).
+      // console.log('error when connecting to db:', err);
       setTimeout(handleDisconnect, 2000); // We introduce a delay before attempting to reconnect,
-    }                                     // to avoid a hot loop, and to allow our node script to
-  });                                     // process asynchronous requests in the meantime.
-                                          // If you're also serving http, display a 503 error.
-  connection.on('error', function(err) {
-    console.log('db error', err);
-    if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
-      handleDisconnect();                         // lost due to either server restart, or a
-    } else {                                      // connnection idle timeout (the wait_timeout
-      throw err;                                  // server variable configures this)
+    } // to avoid a hot loop, and to allow our node script to
+  }); // process asynchronous requests in the meantime.
+  // If you're also serving http, display a 503 error.
+  connection.on("error", function (err) {
+    // console.log('db error', err);
+    if (err.code === "PROTOCOL_CONNECTION_LOST") {
+      // Connection to the MySQL server is usually
+      handleDisconnect(); // lost due to either server restart, or a
+    } else {
+      // connnection idle timeout (the wait_timeout
+      throw err; // server variable configures this)
     }
   });
 }
@@ -108,6 +113,10 @@ app.post("/login_driver", async (req, res) => {
   const driver_check = req.body.driver_check;
   const email = req.body.email;
   const pswd = req.body.password;
+  if (!email || !pswd) {
+    res.json({ message: "Please enter both email and password." });
+    return;
+  }
   if (driver_check) {
     const query = `SELECT * FROM drivers WHERE email = '${email}'`;
     try {
@@ -118,19 +127,25 @@ app.post("/login_driver", async (req, res) => {
         if (match) {
           req.session.loggedin = true;
           req.session.userId = results[0][0].id;
-          res.redirect("/dashboard");
+          res.json({ message: "Login successful!", success: true });
+
         } else {
-          res.send("Incorrect email and/or password");
+          res.json({
+            message: "Incorrect email and/or password.",
+          });
         }
       } else {
-        res.send("Incorrect email and/or password");
-      }
+        res.json({
+          message: "Incorrect email and/or password.",
+        });      }
     } catch (error) {
       console.error(error);
-      res.send("An error occurred while checking the login information");
+      res.json({
+        message: "IAn error occurred while checking the login information.",
+      });
     }
   } else {
-    const query = `SELECT * FROM clients WHERE email = '${email}' AND password ='${pswd}'`;
+    const query = `SELECT * FROM clients WHERE email = '${email}'`;
     try {
       const results = await connection.promise().query(query);
       if (results[0].length > 0) {
@@ -139,15 +154,17 @@ app.post("/login_driver", async (req, res) => {
         if (match) {
           req.session.loggedin = true;
           req.session.userId = results[0].id;
-          res.redirect("/clients");
+          res.json({ message: "Login successful!", success: true });
         } else {
-          res.send("Incorrect email and/or password");
-        }
+          res.json({
+            message: "Incorrect email and/or password.",
+          });        }
       } else {
-        res.send("Incorrect email and/or password");
-      }
+        res.json({
+          message: "Incorrect email and/or password.",
+        });      }
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       res.send("An error occurred while checking the login information");
     }
   }
@@ -281,15 +298,23 @@ app.post("/register", async function (req, res) {
   let f_name = req.body.f_name;
   let email = req.body.email;
   const password = await bcrypt.hash(req.body.password, 10);
-
+  if (!email || !password) {
+    res.json({ message: "Please enter both email and password." });
+    return;
+  }
   let checksql = "SELECT * FROM drivers WHERE email = ?";
   let chechvalue = [email];
   if (driver_check) {
     connection.query(checksql, chechvalue, function (err, result) {
-      if (err) throw err;
-      if (result.length) {
+      if (err) {
+        console.error("Error checking email in database", err);
+
+        res.json({ message: "An error occurred. Please try again later." });
+      } else if (result.length) {
         console.log("Email already in use. Please choose a different email.");
-        res.redirect("/driver");
+        res.json({
+          message: "Email already in use. Please choose a different email.",
+        });
       } else {
         console.log("checked");
         let sql =
@@ -297,22 +322,31 @@ app.post("/register", async function (req, res) {
         let values = [f_name, email, password];
 
         connection.query(sql, values, function (err, result) {
-          if (err) throw err;
-          console.log("User registered successfully!");
-          req.session.loggedin = true;
-          req.session.userId = result.insertId;
-          connection.query(
-            "UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1",
-            (error, resultss, fields) => {
-              if (error) {
-                console.error(
-                  "Error updating created_acc count in database",
-                  error
-                );
+          if (err) {
+            console.error("Error inserting user into database", err);
+            res.render("driver_lgn_reg.ejs", {
+              message: "An error occurred. Please try again later.",
+            });
+          } else {
+            console.log("User registered successfully!");
+            req.session.loggedin = true;
+            req.session.userId = result.insertId;
+
+            connection.query(
+              "UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1",
+              (error, resultss, fields) => {
+                if (error) {
+                  console.error(
+                    "Error updating created_acc count in database",
+                    error
+                  );
+                }
               }
-            }
-          );
-          res.redirect("/driver");
+            );
+
+            res.json({ message: "Registration successful!", success: true });
+            console.log({ message: "Registration successful!", success: true });
+          }
         });
       }
     });
@@ -322,23 +356,28 @@ app.post("/register", async function (req, res) {
     let values = [f_name, email, password];
 
     connection.query(sql, values, function (err, result) {
-      if (err) throw err;
-      console.log("User registered successfully!");
-      req.session.loggedin = true;
-      console.log(result);
-      req.session.userId = result.id;
-      connection.query(
-        "UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1",
-        (error, resultss, fields) => {
-          if (error) {
-            console.error(
-              "Error updating created_acc count in database",
-              error
-            );
+      if (err) {
+        console.error("Error inserting user into database", err);
+        res.json({ message: "An error occurred. Please try again later." });
+      } else {
+        console.log("User registered successfully!");
+        req.session.loggedin = true;
+        console.log(result);
+        req.session.userId = result.id;
+
+        connection.query(
+          "UPDATE userdata SET created_acc = created_acc + 1 WHERE id = 1",
+          (error, resultss, fields) => {
+            if (error) {
+              console.error(
+                "Error updating created_acc count in database",
+                error
+              );
+            }
           }
-        }
-      );
-      res.redirect("/clients");
+        );
+        res.json({ message: "Registration successful!", success: true });
+      }
     });
   }
 });
@@ -369,8 +408,8 @@ app.get("/clients/:id", async (req, res) => {
 
 //------------- SuperAdmin ---------------//
 // Load the data and render the page
-app.get('/admin', (req, res) => {
-  connection.query('SELECT * FROM userdata', (err, result) => {
+app.get("/admin", (req, res) => {
+  connection.query("SELECT * FROM userdata", (err, result) => {
     if (err) {
       console.error(err);
       res.sendStatus(500);
@@ -381,21 +420,21 @@ app.get('/admin', (req, res) => {
     const accountCount = result[0].created_acc;
 
     const canvas = Canvas.createCanvas(500, 500);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
     const chart = new Chart(ctx, {
-      type: 'bar',
+      type: "bar",
       data: {
-        labels: ['All-time visitors', 'Created accounts'],
+        labels: ["All-time visitors", "Created accounts"],
         datasets: [
           {
-            label: 'Count',
+            label: "Count",
             data: [visitorCount, accountCount],
             backgroundColor: [
-              'rgba(255, 99, 132, 0.2)',
-              'rgba(54, 162, 235, 0.2)',
+              "rgba(255, 99, 132, 0.2)",
+              "rgba(54, 162, 235, 0.2)",
             ],
-            borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+            borderColor: ["rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)"],
             borderWidth: 1,
           },
         ],
@@ -410,8 +449,8 @@ app.get('/admin', (req, res) => {
     });
 
     const chartUrl = canvas.toDataURL();
-    
-    res.render('Admin/index.ejs', {
+
+    res.render("Admin/index.ejs", {
       visitors: result[0].visitors,
       Drivers: result[0].created_acc,
       clients: result[0].clients,
