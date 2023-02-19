@@ -11,7 +11,7 @@ const multer = require("multer");
 const path = require("path");
 const Chart = require('chart.js/auto');
 const Canvas = require('canvas');
-
+const port = process.env.PORT || 1000;
 const app = express();
 
 app.use(
@@ -420,6 +420,6 @@ app.post("/log", async (req, res) => {
   }
 });
 //---------- Server is on ---------//
-app.listen(process.env.PORT || 1000, () => {
+app.listen(port, () => {
   console.log("Server is On!!");
 });
