@@ -1,7 +1,5 @@
 const express = require("express");
 var minify = require("express-minify");
-// const MainRoute = require("./routes/index");
-// const driver = require("./routes/driver");
 const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
 const mysql = require("mysql2");
