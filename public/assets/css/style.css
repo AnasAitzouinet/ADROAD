@@ -7446,7 +7446,7 @@ ul:not(.cs-mega_wrapper)
   display: grid;
   grid-gap: 36px 40px;
   -ms-grid-columns: (1fr)[2];
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns : repeat(2, 1fr);
 }
 
 .cs-funfact.cs-style1 {
