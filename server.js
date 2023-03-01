@@ -11,6 +11,7 @@ const Canvas = require("canvas");
 const port = process.env.PORT || 1000;
 const app = express();
 const Sequelize = require('sequelize');
+app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -30,10 +31,10 @@ app.use(
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
-
+const auth = require('./auth');
 const db = require("./database");
 
-
+app.use(auth);
 
 
 

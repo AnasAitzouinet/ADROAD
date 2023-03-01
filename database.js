@@ -1,7 +1,7 @@
 const express = require("express");
-const MySQLStore = require("express-mysql-session");
 const { Sequelize, DataTypes } = require("sequelize");
 const app = express();
+app.use(express.json());
 
 const sequelize = new Sequelize({
   dialect: "mysql",
@@ -13,7 +13,7 @@ const sequelize = new Sequelize({
 
 async function createTables() {
   try {
-    const userTableExists = await User.describe();
+    const userTableExists = await Users.describe();
     const clientTableExists = await Client.describe();
     const driverTableExists = await Driver.describe();
     const locationTableExists = await Location.describe();
@@ -31,7 +31,7 @@ async function createTables() {
     console.log("Error checking if tables exist", error);
   }
 
-  await User.sync({ force: true });
+  await Users.sync({ force: true });
   await Client.sync({ force: true });
   await Driver.sync({ force: true });
   await Location.sync({ force: true });
@@ -47,7 +47,7 @@ async function main() {
   }
 }
 
-const User = sequelize.define("User", {
+const Users = sequelize.define("Users", {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -55,37 +55,37 @@ const User = sequelize.define("User", {
   },
   f_name: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   l_name: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   avatar: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   phone_num: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     unique: true,
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   created_at: {
     type: DataTypes.DATE,
-    allowNull: false,
+    allowNull: true,
     defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
   },
   user_type: {
     type: DataTypes.ENUM("client", "driver"),
-    allowNull: false,
+    allowNull: true,
   },
 });
 
@@ -97,11 +97,11 @@ const Client = sequelize.define("Client", {
   },
   company_name: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   budget: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
+    allowNull: true,
   },
 });
 
@@ -113,11 +113,11 @@ const Driver = sequelize.define("Driver", {
   },
   car_make: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   car_model: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
 });
 
@@ -129,19 +129,21 @@ const Location = sequelize.define("Location", {
   },
   latitude: {
     type: DataTypes.DECIMAL(10, 8),
-    allowNull: false,
+    allowNull: true,
   },
   longitude: {
     type: DataTypes.DECIMAL(11, 8),
-    allowNull: false,
+    allowNull: true,
   },
   timestamp: {
     type: DataTypes.DATE,
-    allowNull: false,
+    allowNull: true,
   },
   location_month: {
     type: DataTypes.STRING(7),
-    allowNull: false,
+    allowNull: true,
   },
 });
 main();
+
+module.exports = {Users,Driver,Location};

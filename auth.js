@@ -2,26 +2,25 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
-const Sequelize = require('sequelize');
 
-const { sequelize, User, Client, Driver, Location } = require("./db"); // import the sequelize instance and models
-
+const { sequelize, Users, Client, Driver, Location } = require("./database"); // import the sequelize instance and models
+router.use(express.json());
 router.use(express.urlencoded({ extended: true })); // Add this line to parse urlencoded form data
 
-router.post("/register/con", async function (req, res) {
+router.post("/regi", async function (req, res) {
     const email = req.body.email;
     const password = req.body.password;
+    console.log(req.body)
     if (!password) {
       return res.status(400).send('Password is required');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     try{
-      const user = await User.create({ email, password: hashedPassword });
-      res.json({ id: user.id });
-      console.log('works')
+      const user = await Users.create({ email, password: hashedPassword });
+      res.json({ success: true, message: "User created succesfuly" });
     } catch (error){
       console.log('Error creating user:', error);
-      res.status(500).send('Error creating user');
+      res.status(500).json({message:'Error creating user'});
     }
   });
 
