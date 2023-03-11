@@ -5,10 +5,10 @@ app.use(express.json());
 
 const sequelize = new Sequelize({
   dialect: "mysql",
-  host: "eu-cdbr-west-03.cleardb.net",
-  username: "b23c8a045bfb66",
-  password: "a2b3cd99",
-  database: "heroku_e89598fb25b1a5e",
+  host: "sql.freedb.tech",
+  username: "freedb_anas_dtk",
+  password: "NsGxN6&DPtCwzb5",
+  database: "freedb_adroad",
 });
 
 async function createTables() {

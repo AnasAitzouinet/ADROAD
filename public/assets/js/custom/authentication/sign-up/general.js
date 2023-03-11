@@ -112,7 +112,6 @@ var KTSignupGeneral = (function () {
             contentType: "application/json",
             processData: false,
             success: function (response) {
-              console.log(response);
               // Hide loading indication
               submitButton.removeAttribute("data-kt-indicator");
               // Enable button
@@ -131,7 +130,7 @@ var KTSignupGeneral = (function () {
                   if (result.isConfirmed) {
                     form.reset(); // reset form
                     passwordMeter.reset(); // reset password meter
-                    window.location.href = "/dashboard"; // redirect to dashboard
+                    window.location.href = "/login"; // redirect to dashboard
                   }
                 });
               } else {
