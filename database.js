@@ -11,6 +11,7 @@ const sequelize = new Sequelize({
   database: "freedb_adroad",
 });
 
+
 async function createTables() {
   try {
     const userTableExists = await Users.describe();
